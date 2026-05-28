@@ -1,4 +1,4 @@
-.PHONY: build test app clean run
+.PHONY: build test app dmg clean run
 
 build:
 	swift build
@@ -8,6 +8,9 @@ test:
 
 app:
 	./scripts/bundle-app.sh
+
+dmg: app
+	./scripts/make-dmg.sh
 
 run: build
 	swift run winch

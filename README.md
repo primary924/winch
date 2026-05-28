@@ -7,39 +7,35 @@ X11/Linux의 `Alt+드래그` 패턴을 macOS에 가져온 것입니다.
 ## 요구 사항
 
 - macOS 13 Ventura 이상
-- Xcode Command Line Tools 또는 Xcode (Swift 5.9+)
 
-## 설치
+## 다운로드 및 설치
 
-현재는 소스 빌드만 지원합니다. (배포용 `.dmg`는 추후 제공 예정)
+[Releases 페이지](https://github.com/primary924/winch/releases)에서 `Winch-x.y.z.dmg`를 받습니다.
 
-```bash
-git clone https://github.com/primary924/winch.git
-cd winch
-make app
-```
+1. DMG를 더블클릭해 마운트
+2. `Winch.app`을 `Applications` 폴더로 드래그
 
-빌드가 끝나면 `.build/release/Winch.app`이 생성됩니다.
+### 첫 실행 (미서명 빌드 안내)
 
-상시 사용하려면 앱을 `/Applications`로 옮깁니다:
+Winch는 아직 Apple Developer Program에 등록되어 있지 않아 코드 서명이 없습니다. 처음 실행할 때 macOS Gatekeeper가 차단할 수 있습니다.
 
-```bash
-cp -R .build/release/Winch.app /Applications/
-```
+1. Finder에서 `Applications` → `Winch.app`을 **우클릭 → 열기** (더블클릭이 아니라 우클릭→열기)
+2. "신원 미확인 개발자" 경고가 뜨면 **열기** 클릭
+3. 한 번 허용한 뒤로는 더블클릭으로 정상 실행됩니다
 
-## 첫 실행
+대안 (터미널 한 줄로 해제):
 
 ```bash
-open /Applications/Winch.app
+xattr -dr com.apple.quarantine /Applications/Winch.app
 ```
 
-처음 실행하면 macOS가 **손쉬운 사용(Accessibility) 권한**을 요청합니다. 이 권한이 없으면 Winch는 창을 옮길 수 없습니다.
+### Accessibility 권한 부여
 
-1. 시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용 으로 이동
+Winch가 창을 옮기려면 **손쉬운 사용(Accessibility) 권한**이 필요합니다. 처음 실행하면 시스템이 자동으로 권한을 요청합니다.
+
+1. 시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용
 2. 목록에서 `Winch`를 켭니다
 3. 메뉴바 아이콘이 `⚠W`(권한 필요) → `●W`(활성)으로 바뀌면 준비 완료
-
-> 앱을 다시 빌드하면 바이너리 해시가 바뀌어 권한이 초기화될 수 있습니다. 이 경우 시스템 설정에서 다시 켜주세요.
 
 ## 사용법
 
@@ -73,8 +69,22 @@ open /Applications/Winch.app
 ## 알려진 한계
 
 - v1은 창 이동만 지원합니다 (리사이즈, 스냅, 타일링 없음)
-- 직접 빌드한 바이너리는 코드 서명이 되어 있지 않아 macOS Gatekeeper가 경고할 수 있습니다 (`마우스 우클릭 → 열기`로 우회)
 - 전체화면 창, 시스템 UI(Dock, 메뉴바)는 이동 대상이 아닙니다
+- 미서명 빌드라 Gatekeeper 첫 실행 우회가 필요합니다 (위 안내 참조)
+
+## 소스에서 빌드 (개발자)
+
+Xcode Command Line Tools 또는 Xcode (Swift 5.9+)가 필요합니다.
+
+```bash
+git clone https://github.com/primary924/winch.git
+cd winch
+make app          # .build/release/Winch.app 생성
+make dmg          # .build/release/Winch-x.y.z.dmg 생성
+make test         # 도메인 테스트 실행
+```
+
+프로젝트 구조와 설계는 `docs/superpowers/specs/`와 `docs/superpowers/plans/` 참고.
 
 ## 라이선스
 
