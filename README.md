@@ -78,4 +78,4 @@ open /Applications/Winch.app
 
 ## 라이선스
 
-(추후 추가)
+[MIT License](LICENSE) © 2026 hyakoo
