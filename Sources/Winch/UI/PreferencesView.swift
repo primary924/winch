@@ -30,6 +30,13 @@ struct PreferencesView: View {
                 Toggle("Launch Winch at login", isOn: $model.launchAtLogin)
             }
 
+            Section("Edge Snap") {
+                Toggle("Enable edge snap", isOn: $model.snapEnabled)
+                Text("Drag a window to the top, left, or right edge of the screen to snap it.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             if !model.isAccessibilityTrusted {
                 Section {
                     HStack(spacing: 8) {
@@ -63,15 +70,23 @@ final class PreferencesModel: ObservableObject {
             onLaunchAtLoginChange?(launchAtLogin)
         }
     }
+    @Published var snapEnabled: Bool {
+        didSet {
+            guard oldValue != snapEnabled else { return }
+            onSnapEnabledChange?(snapEnabled)
+        }
+    }
     @Published var isAccessibilityTrusted: Bool
 
     var onHotkeyChange: ((HotkeyConfig) -> Void)?
     var onLaunchAtLoginChange: ((Bool) -> Void)?
+    var onSnapEnabledChange: ((Bool) -> Void)?
     var onOpenSystemSettings: (() -> Void)?
 
     init(
         initial: HotkeyConfig,
         launchAtLogin: Bool,
+        snapEnabled: Bool,
         isAccessibilityTrusted: Bool
     ) {
         self.command = initial.modifierFlags.contains(.maskCommand)
@@ -80,6 +95,7 @@ final class PreferencesModel: ObservableObject {
         self.shift   = initial.modifierFlags.contains(.maskShift)
         self.fn      = initial.modifierFlags.contains(.maskSecondaryFn)
         self.launchAtLogin = launchAtLogin
+        self.snapEnabled = snapEnabled
         self.isAccessibilityTrusted = isAccessibilityTrusted
     }
 

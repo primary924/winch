@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowController: WindowController!
     private var cursorLocator: SystemCursorLocator!
     private var screenInfoProvider: SystemScreenInfoProvider!
+    private var snapPreview: SnapPreviewWindow!
     private var settings: SettingsStore!
     private var loginItem: LoginItemManager!
     private var preferencesWindow: PreferencesWindowController?
@@ -28,6 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         eventTap            = EventTap()
         menuBar             = MenuBarController()
 
+        snapPreview     = SnapPreviewWindow()
+
         dragController = DragController(
             hotkeyConfig: settings.hotkeyConfig,
             windowController: windowController,
@@ -35,6 +38,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             screenInfoProvider: screenInfoProvider
         )
         dragController.isPaused = settings.isPaused
+        dragController.isSnapEnabled = settings.isSnapEnabled
+        dragController.onSnapZoneChanged = { [weak self] target in
+            guard let self else { return }
+            if let t = target {
+                self.snapPreview.show(at: t.frame)
+            } else {
+                self.snapPreview.hide()
+            }
+        }
 
         wireMenuBar()
         wirePermissions()
@@ -126,6 +138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let model = PreferencesModel(
                 initial: settings.hotkeyConfig,
                 launchAtLogin: loginItem.isRegistered,
+                snapEnabled: settings.isSnapEnabled,
                 isAccessibilityTrusted: permissions.isTrusted
             )
             model.onHotkeyChange = { [weak self] config in
@@ -141,6 +154,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 } catch {
                     NSLog("Login item update failed: \(error)")
                 }
+            }
+            model.onSnapEnabledChange = { [weak self] enabled in
+                guard let self else { return }
+                self.settings.isSnapEnabled = enabled
+                self.dragController.isSnapEnabled = enabled
             }
             model.onOpenSystemSettings = { [weak self] in
                 self?.permissions.openSystemSettings()
