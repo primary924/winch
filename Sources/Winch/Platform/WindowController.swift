@@ -1,6 +1,5 @@
 import AppKit
 import ApplicationServices
-import CoreGraphics
 import WinchDomain
 
 /// Wraps an AXUIElement reference as an opaque WindowHandle.
@@ -24,7 +23,8 @@ final class WindowController: WindowControlling {
             &focused
         )
         guard result == .success, let focused = focused else { return nil }
-        let windowElement = focused as! AXUIElement  // AX attribute is always AXUIElement when result is .success
+        guard CFGetTypeID(focused) == AXUIElementGetTypeID() else { return nil }
+        let windowElement = focused as! AXUIElement
 
         // Reject windows we cannot move (system UI, fullscreen panels).
         var movable: CFTypeRef?
@@ -48,8 +48,10 @@ final class WindowController: WindowControlling {
             &positionValue
         )
         guard result == .success, let value = positionValue else { return nil }
+        guard CFGetTypeID(value) == AXValueGetTypeID() else { return nil }
+        let axValue = value as! AXValue
         var point = CGPoint.zero
-        guard AXValueGetValue(value as! AXValue, .cgPoint, &point) else { return nil }
+        guard AXValueGetValue(axValue, .cgPoint, &point) else { return nil }
         return point
     }
 
