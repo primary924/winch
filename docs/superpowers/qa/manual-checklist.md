@@ -36,3 +36,12 @@ Run before each release. Build via `make app` and launch `.build/release/Winch.a
 
 ## Exit
 - [ ] Menu bar → "Quit Winch" → app exits cleanly, menu bar item disappears
+
+## 아이콘 표시
+- [ ] 메뉴바: 권한 부여 전 ⚠️ 삼각형 (`exclamationmark.triangle.fill`)
+- [ ] 메뉴바: 권한 부여 후 4방향 화살표 (`arrow.up.and.down.and.arrow.left.and.right`)
+- [ ] 메뉴바: Pause 클릭 시 일시정지 심볼 (`pause.fill`)
+- [ ] 메뉴바: Resume 클릭 시 다시 4방향 화살표
+- [ ] Finder Applications: 블루 그라데이션 + 흰 화살표 앱 아이콘 (텍스트 "exec" 아이콘 아님)
+- [ ] About Winch 패널: 동일 앱 아이콘 표시
+- [ ] 시스템 설정 → 개인정보 보호 → 손쉬운 사용 목록: Winch 항목 옆 동일 아이콘
