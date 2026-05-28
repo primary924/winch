@@ -16,5 +16,6 @@ mkdir -p "$APP_DIR/Contents/Resources"
 
 cp "${BUILD_DIR}/winch" "$APP_DIR/Contents/MacOS/winch"
 cp Resources/Info.plist "$APP_DIR/Contents/Info.plist"
+cp Resources/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 echo "Done: ${APP_DIR}"

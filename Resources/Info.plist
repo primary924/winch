@@ -10,6 +10,8 @@
     <string>com.hyakoo.winch</string>
     <key>CFBundleExecutable</key>
     <string>winch</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleShortVersionString</key>
     <string>0.1.1</string>
     <key>CFBundleVersion</key>
