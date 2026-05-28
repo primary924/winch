@@ -24,7 +24,6 @@ final class MenuBarController: NSObject {
     override init() {
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
-        statusItem.button?.title = "W"
         rebuildMenu()
         updateAppearance()
     }
@@ -37,11 +36,24 @@ final class MenuBarController: NSObject {
 
     private func updateAppearance() {
         guard let button = statusItem.button else { return }
+        let symbolName: String
+        let accessibilityLabel: String
         switch status {
-        case .active:            button.title = "●W"
-        case .paused:            button.title = "⏸W"
-        case .permissionMissing: button.title = "⚠W"
+        case .active:
+            symbolName = "arrow.up.and.down.and.arrow.left.and.right"
+            accessibilityLabel = "활성"
+        case .paused:
+            symbolName = "pause.fill"
+            accessibilityLabel = "일시정지"
+        case .permissionMissing:
+            symbolName = "exclamationmark.triangle.fill"
+            accessibilityLabel = "권한 필요"
         }
+        let image = NSImage(systemSymbolName: symbolName,
+                            accessibilityDescription: accessibilityLabel)
+        image?.isTemplate = true
+        button.image = image
+        button.title = ""
     }
 
     private func rebuildMenu() {
