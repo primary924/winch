@@ -1,3 +1,9 @@
-import Foundation
+import AppKit
 
-print("Winch placeholder")
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    let delegate = AppDelegate()
+    app.delegate = delegate
+    app.setActivationPolicy(.accessory)  // No Dock icon (LSUIElement equivalent at runtime)
+    app.run()
+}
