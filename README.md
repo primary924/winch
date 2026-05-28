@@ -1,5 +1,7 @@
 # Winch
 
+[![CI](https://github.com/primary924/winch/actions/workflows/ci.yml/badge.svg)](https://github.com/primary924/winch/actions/workflows/ci.yml)
+
 macOS에서 윈도우 창의 타이틀바를 일일이 잡지 않고도 창을 옮길 수 있게 해주는 메뉴바 유틸리티입니다. 사전에 지정한 수정키를 누른 상태에서 마우스를 움직이면 활성 창이 커서를 따라 이동합니다.
 
 X11/Linux의 `Alt+드래그` 패턴을 macOS에 가져온 것입니다.
@@ -85,6 +87,23 @@ make test         # 도메인 테스트 실행
 ```
 
 프로젝트 구조와 설계는 `docs/superpowers/specs/`와 `docs/superpowers/plans/` 참고.
+
+### 릴리즈 발행
+
+`v*` 태그를 push하면 GitHub Actions가 자동으로 DMG를 빌드해 GitHub Release를 발행합니다.
+
+```bash
+# 1. Resources/Info.plist의 CFBundleShortVersionString을 새 버전으로 수정 (예: 0.2.0)
+# 2. 변경사항 커밋
+git commit -am "chore: bump version to 0.2.0"
+# 3. 태그 생성 및 push
+git tag v0.2.0
+git push && git push --tags
+```
+
+태그 버전(`0.2.0`)과 Info.plist의 버전이 일치해야 합니다. 불일치 시 워크플로가 실패합니다.
+
+릴리즈 노트는 이전 태그 이후의 커밋 메시지에서 자동 생성됩니다.
 
 ## 라이선스
 
