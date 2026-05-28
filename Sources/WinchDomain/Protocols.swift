@@ -10,16 +10,34 @@ public protocol WindowControlling {
     /// or nil if no movable window is available (system UI, fullscreen, etc.).
     func frontmostWindow() -> WindowHandle?
 
-    /// Reads the window's current top-left position in screen coordinates.
-    /// Returns nil if the handle is invalid (window closed).
-    func position(of window: WindowHandle) -> CGPoint?
+    /// Reads the window's current frame (position + size) in screen coordinates
+    /// with top-left origin. Returns nil if the handle is invalid.
+    func frame(of window: WindowHandle) -> CGRect?
 
-    /// Sets the window's top-left position. Silently no-ops on failure
-    /// (window closed mid-drag, etc.).
+    /// Sets the window's top-left position. Silently no-ops on failure.
     func setPosition(of window: WindowHandle, to point: CGPoint)
+
+    /// Sets the window's full frame (position + size). Used for snap commit and
+    /// pre-snap restoration. Silently no-ops on failure.
+    func setFrame(of window: WindowHandle, to frame: CGRect)
 }
 
 public protocol CursorLocating {
-    /// Current cursor position in screen coordinates.
+    /// Current cursor position in top-left screen coordinates.
     var location: CGPoint { get }
+}
+
+public protocol ScreenInfoProviding {
+    /// Returns the visible frame (excludes menu bar and Dock) of the screen
+    /// containing the given point, in top-left screen coordinates.
+    /// Returns nil if the point is not on any connected screen.
+    func visibleFrame(containing point: CGPoint) -> CGRect?
+}
+
+public protocol SnapPreviewing {
+    /// Shows the snap preview overlay at the given frame (top-left coords).
+    func show(at frame: CGRect)
+
+    /// Hides the snap preview overlay.
+    func hide()
 }

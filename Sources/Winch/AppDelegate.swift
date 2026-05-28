@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dragController: DragController!
     private var windowController: WindowController!
     private var cursorLocator: SystemCursorLocator!
+    private var screenInfoProvider: SystemScreenInfoProvider!
     private var settings: SettingsStore!
     private var loginItem: LoginItemManager!
     private var preferencesWindow: PreferencesWindowController?
@@ -19,17 +20,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         settings         = SettingsStore()
-        windowController = WindowController()
-        cursorLocator    = SystemCursorLocator()
-        loginItem        = LoginItemManager()
-        permissions      = PermissionManager()
-        eventTap         = EventTap()
-        menuBar          = MenuBarController()
+        windowController    = WindowController()
+        cursorLocator       = SystemCursorLocator()
+        screenInfoProvider  = SystemScreenInfoProvider()
+        loginItem           = LoginItemManager()
+        permissions         = PermissionManager()
+        eventTap            = EventTap()
+        menuBar             = MenuBarController()
 
         dragController = DragController(
             hotkeyConfig: settings.hotkeyConfig,
             windowController: windowController,
-            cursorLocator: cursorLocator
+            cursorLocator: cursorLocator,
+            screenInfoProvider: screenInfoProvider
         )
         dragController.isPaused = settings.isPaused
 

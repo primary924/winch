@@ -30,7 +30,7 @@ final class WindowController: WindowControlling {
         var movable: CFTypeRef?
         if AXUIElementCopyAttributeValue(
             windowElement,
-            "AXMovable" as CFString,  // kAXMovableAttribute (not in headers on all SDK versions)
+            "AXMovable" as CFString,
             &movable
         ) == .success, let movableBool = movable as? Bool, !movableBool {
             return nil
@@ -39,31 +39,57 @@ final class WindowController: WindowControlling {
         return AXWindow(windowElement)
     }
 
-    func position(of window: WindowHandle) -> CGPoint? {
+    func frame(of window: WindowHandle) -> CGRect? {
         guard let window = window as? AXWindow else { return nil }
-        var positionValue: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(
-            window.element,
-            kAXPositionAttribute as CFString,
-            &positionValue
-        )
-        guard result == .success, let value = positionValue else { return nil }
-        guard CFGetTypeID(value) == AXValueGetTypeID() else { return nil }
-        let axValue = value as! AXValue
-        var point = CGPoint.zero
-        guard AXValueGetValue(axValue, .cgPoint, &point) else { return nil }
-        return point
+        guard let origin = readPoint(window.element, attribute: kAXPositionAttribute) else { return nil }
+        guard let size = readSize(window.element, attribute: kAXSizeAttribute) else { return nil }
+        return CGRect(origin: origin, size: size)
     }
 
     func setPosition(of window: WindowHandle, to point: CGPoint) {
         guard let window = window as? AXWindow else { return }
-        var mutablePoint = point
-        guard let value = AXValueCreate(.cgPoint, &mutablePoint) else { return }
-        // Silently ignore failure: window may have closed mid-drag.
+        var p = point
+        guard let value = AXValueCreate(.cgPoint, &p) else { return }
         _ = AXUIElementSetAttributeValue(
             window.element,
             kAXPositionAttribute as CFString,
             value
         )
+    }
+
+    func setFrame(of window: WindowHandle, to frame: CGRect) {
+        guard let window = window as? AXWindow else { return }
+        var origin = frame.origin
+        var size = frame.size
+        if let posValue = AXValueCreate(.cgPoint, &origin) {
+            _ = AXUIElementSetAttributeValue(window.element, kAXPositionAttribute as CFString, posValue)
+        }
+        if let sizeValue = AXValueCreate(.cgSize, &size) {
+            _ = AXUIElementSetAttributeValue(window.element, kAXSizeAttribute as CFString, sizeValue)
+        }
+    }
+
+    // MARK: - private helpers
+
+    private func readPoint(_ element: AXUIElement, attribute: String) -> CGPoint? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+              let v = value,
+              CFGetTypeID(v) == AXValueGetTypeID() else { return nil }
+        let axValue = v as! AXValue
+        var point = CGPoint.zero
+        guard AXValueGetValue(axValue, .cgPoint, &point) else { return nil }
+        return point
+    }
+
+    private func readSize(_ element: AXUIElement, attribute: String) -> CGSize? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+              let v = value,
+              CFGetTypeID(v) == AXValueGetTypeID() else { return nil }
+        let axValue = v as! AXValue
+        var size = CGSize.zero
+        guard AXValueGetValue(axValue, .cgSize, &size) else { return nil }
+        return size
     }
 }
