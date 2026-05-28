@@ -25,6 +25,8 @@ final class EventTap {
             (1 << CGEventType.flagsChanged.rawValue) |
             (1 << CGEventType.mouseMoved.rawValue)
 
+        // passUnretained: the owner (AppDelegate) must keep this EventTap alive
+        // for as long as the tap is installed. uninstall() must run before deinit.
         let context = Unmanaged.passUnretained(self).toOpaque()
 
         guard let tap = CGEvent.tapCreate(
