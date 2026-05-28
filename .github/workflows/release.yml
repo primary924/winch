@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build DMG & publish release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches Info.plist version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PLIST_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
+          echo "Tag version:   $TAG_VERSION"
+          echo "Plist version: $PLIST_VERSION"
+          if [[ "$TAG_VERSION" != "$PLIST_VERSION" ]]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match Info.plist ($PLIST_VERSION)"
+            exit 1
+          fi
+          echo "VERSION=$PLIST_VERSION" >> "$GITHUB_ENV"
+
+      - name: Swift test
+        run: swift test
+
+      - name: Build app bundle
+        run: make app
+
+      - name: Build DMG
+        run: make dmg
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            ".build/release/Winch-${VERSION}.dmg" \
+            --title "Winch ${VERSION}" \
+            --generate-notes
