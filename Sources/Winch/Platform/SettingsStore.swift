@@ -10,6 +10,7 @@ final class SettingsStore {
         static let hotkeyModifierFlags = "hotkey.modifierFlags"
         static let appPaused = "app.paused"
         static let launchAtLogin = "app.launchAtLogin"
+        static let snapEnabled = "snap.enabled"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -39,5 +40,13 @@ final class SettingsStore {
     var launchAtLogin: Bool {
         get { defaults.bool(forKey: Key.launchAtLogin) }
         set { defaults.set(newValue, forKey: Key.launchAtLogin) }
+    }
+
+    var isSnapEnabled: Bool {
+        get {
+            if defaults.object(forKey: Key.snapEnabled) == nil { return true }
+            return defaults.bool(forKey: Key.snapEnabled)
+        }
+        set { defaults.set(newValue, forKey: Key.snapEnabled) }
     }
 }
