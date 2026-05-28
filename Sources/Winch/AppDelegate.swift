@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settings: SettingsStore!
     private var loginItem: LoginItemManager!
     private var preferencesWindow: PreferencesWindowController?
+    private var preferencesModel: PreferencesModel?
+    private var isEventTapInstalled: Bool = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         settings         = SettingsStore()
@@ -36,11 +38,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if permissions.isTrusted {
             installEventTap()
-            updateStatus()
         } else {
-            menuBar.setStatus(.permissionMissing)
             permissions.requestWithPrompt()
         }
+        updateStatus()
         permissions.startPolling()
     }
 
@@ -66,10 +67,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.installEventTap()
             } else {
                 self.eventTap.uninstall()
+                self.isEventTapInstalled = false
             }
             self.updateStatus()
             // Update an open preferences window, if any.
-            self.openPreferencesModelIfShowing()?.isAccessibilityTrusted = trusted
+            self.preferencesModel?.isAccessibilityTrusted = trusted
         }
     }
 
@@ -83,13 +85,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.dragController.handleMouseMoved()
             }
         }
-        if !installed {
-            menuBar.setStatus(.permissionMissing)
-        }
+        isEventTapInstalled = installed
     }
 
     private func updateStatus() {
-        if !permissions.isTrusted {
+        if !permissions.isTrusted || !isEventTapInstalled {
             menuBar.setStatus(.permissionMissing)
         } else if dragController.isPaused {
             menuBar.setStatus(.paused)
@@ -122,18 +122,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             model.onOpenSystemSettings = { [weak self] in
                 self?.permissions.openSystemSettings()
             }
+            preferencesModel = model
             preferencesWindow = PreferencesWindowController(
                 rootView: PreferencesView(model: model)
             )
+            if let window = preferencesWindow?.window {
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(handlePreferencesWindowClose(_:)),
+                    name: NSWindow.willCloseNotification,
+                    object: window
+                )
+            }
         }
         preferencesWindow?.show()
     }
 
-    private func openPreferencesModelIfShowing() -> PreferencesModel? {
-        guard let window = preferencesWindow?.window,
-              window.isVisible,
-              let hosting = window.contentViewController as? NSHostingController<PreferencesView>
-        else { return nil }
-        return hosting.rootView.model
+    @objc private func handlePreferencesWindowClose(_ notification: Notification) {
+        if let window = preferencesWindow?.window {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
+        }
+        preferencesWindow = nil
+        preferencesModel = nil
     }
 }
