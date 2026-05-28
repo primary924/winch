@@ -74,37 +74,6 @@ Winch가 창을 옮기려면 **손쉬운 사용(Accessibility) 권한**이 필�
 - 전체화면 창, 시스템 UI(Dock, 메뉴바)는 이동 대상이 아닙니다
 - 미서명 빌드라 Gatekeeper 첫 실행 우회가 필요합니다 (위 안내 참조)
 
-## 소스에서 빌드 (개발자)
-
-Xcode Command Line Tools 또는 Xcode (Swift 5.9+)가 필요합니다.
-
-```bash
-git clone https://github.com/primary924/winch.git
-cd winch
-make app          # .build/release/Winch.app 생성
-make dmg          # .build/release/Winch-x.y.z.dmg 생성
-make test         # 도메인 테스트 실행
-```
-
-프로젝트 구조와 설계는 `docs/superpowers/specs/`와 `docs/superpowers/plans/` 참고.
-
-### 릴리즈 발행
-
-`v*` 태그를 push하면 GitHub Actions가 자동으로 DMG를 빌드해 GitHub Release를 발행합니다.
-
-```bash
-# 1. Resources/Info.plist의 CFBundleShortVersionString을 새 버전으로 수정 (예: 0.2.0)
-# 2. 변경사항 커밋
-git commit -am "chore: bump version to 0.2.0"
-# 3. 태그 생성 및 push
-git tag v0.2.0
-git push && git push --tags
-```
-
-태그 버전(`0.2.0`)과 Info.plist의 버전이 일치해야 합니다. 불일치 시 워크플로가 실패합니다.
-
-릴리즈 노트는 이전 태그 이후의 커밋 메시지에서 자동 생성됩니다.
-
 ## 라이선스
 
 [MIT License](LICENSE) © 2026 hyakoo
