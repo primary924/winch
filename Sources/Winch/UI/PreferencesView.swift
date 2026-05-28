@@ -57,7 +57,12 @@ final class PreferencesModel: ObservableObject {
     @Published var control: Bool { didSet { publishHotkey() } }
     @Published var shift: Bool   { didSet { publishHotkey() } }
     @Published var fn: Bool      { didSet { publishHotkey() } }
-    @Published var launchAtLogin: Bool { didSet { onLaunchAtLoginChange?(launchAtLogin) } }
+    @Published var launchAtLogin: Bool {
+        didSet {
+            guard oldValue != launchAtLogin else { return }
+            onLaunchAtLoginChange?(launchAtLogin)
+        }
+    }
     @Published var isAccessibilityTrusted: Bool
 
     var onHotkeyChange: ((HotkeyConfig) -> Void)?

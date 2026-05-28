@@ -55,6 +55,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.onOpenPreferences = { [weak self] in
             self?.openPreferences()
         }
+        menuBar.isLaunchAtLogin = loginItem.isRegistered
+        menuBar.onToggleLaunchAtLogin = { [weak self] in
+            guard let self else { return }
+            do {
+                if self.loginItem.isRegistered {
+                    try self.loginItem.unregister()
+                } else {
+                    try self.loginItem.register()
+                }
+                self.settings.launchAtLogin = self.loginItem.isRegistered
+                self.menuBar.isLaunchAtLogin = self.loginItem.isRegistered
+                self.preferencesModel?.launchAtLogin = self.loginItem.isRegistered
+            } catch {
+                NSLog("Login item update failed: \(error)")
+            }
+        }
+        menuBar.onShowAbout = {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.orderFrontStandardAboutPanel(nil)
+        }
         menuBar.onQuit = {
             NSApp.terminate(nil)
         }

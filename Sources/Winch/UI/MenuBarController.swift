@@ -10,7 +10,13 @@ final class MenuBarController: NSObject {
 
     var onTogglePause: (() -> Void)?
     var onOpenPreferences: (() -> Void)?
+    var onToggleLaunchAtLogin: (() -> Void)?
+    var onShowAbout: (() -> Void)?
     var onQuit: (() -> Void)?
+
+    var isLaunchAtLogin: Bool = false {
+        didSet { rebuildMenu() }
+    }
 
     private let statusItem: NSStatusItem
     private(set) var status: Status = .active
@@ -60,7 +66,17 @@ final class MenuBarController: NSObject {
         prefsItem.target = self
         menu.addItem(prefsItem)
 
+        let loginItem = NSMenuItem(title: "Launch at login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        loginItem.target = self
+        loginItem.state = isLaunchAtLogin ? .on : .off
+        if status == .permissionMissing { loginItem.isEnabled = false }
+        menu.addItem(loginItem)
+
         menu.addItem(.separator())
+
+        let aboutItem = NSMenuItem(title: "About Winch", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
 
         let quitItem = NSMenuItem(title: "Quit Winch", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
@@ -77,5 +93,7 @@ final class MenuBarController: NSObject {
 
     @objc private func togglePause() { onTogglePause?() }
     @objc private func openPreferences() { onOpenPreferences?() }
+    @objc private func toggleLaunchAtLogin() { onToggleLaunchAtLogin?() }
+    @objc private func showAbout() { onShowAbout?() }
     @objc private func quit() { onQuit?() }
 }
