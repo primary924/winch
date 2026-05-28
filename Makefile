@@ -1,4 +1,4 @@
-.PHONY: build test app dmg clean run
+.PHONY: build test app dmg icon clean run
 
 build:
 	swift build
@@ -11,6 +11,9 @@ app:
 
 dmg: app
 	./scripts/make-dmg.sh
+
+icon:
+	./scripts/build-app-icon.sh
 
 run: build
 	swift run winch
