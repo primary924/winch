@@ -40,9 +40,15 @@ final class FakeCursorLocator: CursorLocating {
 }
 
 final class FakeScreenInfoProvider: ScreenInfoProviding {
+    /// Simple stub: returns same frame for all points. Default 1440x900.
     var stubVisibleFrame: CGRect? = CGRect(x: 0, y: 0, width: 1440, height: 900)
 
+    /// Optional function override: if set, takes precedence over stubVisibleFrame.
+    /// Use this for tests that need different screens per cursor position.
+    var visibleFrameForPoint: ((CGPoint) -> CGRect?)?
+
     func visibleFrame(containing point: CGPoint) -> CGRect? {
-        stubVisibleFrame
+        if let fn = visibleFrameForPoint { return fn(point) }
+        return stubVisibleFrame
     }
 }

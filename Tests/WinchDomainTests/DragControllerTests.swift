@@ -252,7 +252,7 @@ final class DragControllerTests: XCTestCase {
         let (controller, windows, cursor, screens) = makeController()
         let window = FakeWindowHandle("w1")
         windows.stubFrontmostWindow = window
-        let originalFrame = CGRect(x: 100, y: 100, width: 400, height: 300)
+        let originalFrame = CGRect(x: 100, y: 100, width: 600, height: 300)
         windows.stubFrames[ObjectIdentifier(window)] = originalFrame
         screens.stubVisibleFrame = CGRect(x: 0, y: 0, width: 1440, height: 900)
         cursor.location = CGPoint(x: 200, y: 200)
@@ -274,8 +274,12 @@ final class DragControllerTests: XCTestCase {
         controller.handleMouseMoved()
         XCTAssertEqual(windows.setFrameCalls.count, 2, "restore should trigger above threshold")
         let restored = windows.setFrameCalls[1].1
+        // Restored window should be original size, centered horizontally on cursor.x=220,
+        // with top at cursor.y - 14 = 80 - 14 = 66.
+        // Origin.x = cursor.x - width/2 = 220 - 600/2 = -80
+        // Origin.y = cursor.y - 14 = 80 - 14 = 66
         XCTAssertEqual(restored.size, originalFrame.size)
-        XCTAssertEqual(restored.origin.x, 220 - 200, accuracy: 0.001)
+        XCTAssertEqual(restored.origin.x, 220 - 600/2, accuracy: 0.001)
         XCTAssertEqual(restored.origin.y, 80 - 14, accuracy: 0.001)
     }
 
@@ -293,5 +297,44 @@ final class DragControllerTests: XCTestCase {
         controller.handleFlagsChanged([])
 
         XCTAssertEqual(windows.setFrameCalls.count, 0)
+    }
+
+    func testCrossScreenZoneCommitUsesEntryScreenFrame() {
+        // Cursor enters left zone of screen A; user then slides cursor onto screen B.
+        // On modifier release, snap target must be the LEFT half of SCREEN A,
+        // not screen B.
+        let (controller, windows, cursor, screens) = makeController()
+        let window = FakeWindowHandle("w1")
+        windows.stubFrontmostWindow = window
+        windows.stubFrames[ObjectIdentifier(window)] = CGRect(x: 100, y: 100, width: 400, height: 300)
+
+        let screenA = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let screenB = CGRect(x: 1440, y: 0, width: 1280, height: 800)
+        screens.visibleFrameForPoint = { point in
+            if point.x < 1440 { return screenA }
+            return screenB
+        }
+        cursor.location = CGPoint(x: 500, y: 500) // start on screen A center
+
+        controller.handleFlagsChanged([.maskControl, .maskAlternate])
+        // Move cursor into screen A left zone.
+        cursor.location = CGPoint(x: 3, y: 450)
+        controller.handleMouseMoved()
+        // Then move cursor onto screen B (still moving — but eventually leaves zone).
+        cursor.location = CGPoint(x: 1800, y: 450)
+        controller.handleMouseMoved()
+        // Move BACK to screen A's left zone so snap state is .left with frame screenA.
+        cursor.location = CGPoint(x: 3, y: 450)
+        controller.handleMouseMoved()
+        // Now slide cursor onto screen B (still left zone of screen B... actually let's release while on B).
+        cursor.location = CGPoint(x: 1443, y: 450)  // left edge of screen B
+        controller.handleMouseMoved()
+        // Release on screen B.
+        controller.handleFlagsChanged([])
+
+        // At release, the LAST detected zone was .left of screen B (cursor at 1443, which is screen B's minX+3).
+        // Commit must use screen B's frame, not screen A's.
+        XCTAssertEqual(windows.setFrameCalls.count, 1)
+        XCTAssertEqual(windows.setFrameCalls[0].1, CGRect(x: 1440, y: 0, width: 640, height: 800))
     }
 }

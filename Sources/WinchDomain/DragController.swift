@@ -9,7 +9,8 @@ public final class DragController {
             window: WindowHandle,
             originCursor: CGPoint,
             originWindow: CGPoint,
-            currentSnapZone: SnapZone?
+            currentSnapZone: SnapZone?,
+            snapVisibleFrame: CGRect?
         )
     }
 
@@ -63,7 +64,7 @@ public final class DragController {
 
     public func handleMouseMoved() {
         if isPaused { return }
-        guard case let .tracking(window, originCursor, originWindow, prevZone) = state else {
+        guard case let .tracking(window, originCursor, originWindow, prevZone, prevFrame) = state else {
             return
         }
 
@@ -88,9 +89,10 @@ public final class DragController {
                     window: window,
                     originCursor: current,
                     originWindow: newOrigin,
-                    currentSnapZone: prevZone
+                    currentSnapZone: prevZone,
+                    snapVisibleFrame: prevFrame
                 )
-                updateSnapZoneIfChanged(cursor: current, prevZone: prevZone, window: window)
+                updateSnapZoneIfChanged(cursor: current, prevZone: prevZone, prevFrame: prevFrame, window: window)
                 return
             }
         }
@@ -101,7 +103,7 @@ public final class DragController {
         )
         windowController.setPosition(of: window, to: newPos)
 
-        updateSnapZoneIfChanged(cursor: current, prevZone: prevZone, window: window)
+        updateSnapZoneIfChanged(cursor: current, prevZone: prevZone, prevFrame: prevFrame, window: window)
     }
 
     // MARK: - private
@@ -113,22 +115,23 @@ public final class DragController {
             window: window,
             originCursor: cursorLocator.location,
             originWindow: frame.origin,
-            currentSnapZone: nil
+            currentSnapZone: nil,
+            snapVisibleFrame: nil
         )
     }
 
     private func transitionToIdle() {
-        if case .tracking(_, _, _, let zone) = state, zone != nil {
+        if case .tracking(_, _, _, let zone, _) = state, zone != nil {
             onSnapZoneChanged?(nil)
         }
         state = .idle
     }
 
     private func commitSnapIfNeededAndExit() {
-        if case let .tracking(window, _, _, snapZone) = state {
+        if case let .tracking(window, _, _, snapZone, snapVisibleFrame) = state {
             if isSnapEnabled,
                let zone = snapZone,
-               let visibleFrame = screenInfoProvider.visibleFrame(containing: cursorLocator.location) {
+               let visibleFrame = snapVisibleFrame {
                 if let currentFrame = windowController.frame(of: window) {
                     preSnapFrames[ObjectIdentifier(window)] = currentFrame
                 }
@@ -142,22 +145,31 @@ public final class DragController {
         state = .idle
     }
 
-    private func updateSnapZoneIfChanged(cursor: CGPoint, prevZone: SnapZone?, window: WindowHandle) {
+    private func updateSnapZoneIfChanged(cursor: CGPoint, prevZone: SnapZone?, prevFrame: CGRect?, window: WindowHandle) {
         guard isSnapEnabled else { return }
+        let visibleFrame = screenInfoProvider.visibleFrame(containing: cursor)
         let newZone: SnapZone?
-        let target: SnapTarget?
-        if let visibleFrame = screenInfoProvider.visibleFrame(containing: cursor) {
-            newZone = SnapZoneCalculator.zone(forCursor: cursor, in: visibleFrame)
-            target = newZone.map { SnapTarget(zone: $0, frame: SnapZoneCalculator.target(for: $0, in: visibleFrame)) }
+        if let vf = visibleFrame {
+            newZone = SnapZoneCalculator.zone(forCursor: cursor, in: vf)
         } else {
             newZone = nil
+        }
+        // Fire if zone OR frame changed.
+        let frameChanged = visibleFrame != prevFrame
+        let zoneChanged = newZone != prevZone
+        if !zoneChanged && !frameChanged { return }
+
+        let target: SnapTarget?
+        if let z = newZone, let vf = visibleFrame {
+            target = SnapTarget(zone: z, frame: SnapZoneCalculator.target(for: z, in: vf))
+        } else {
             target = nil
         }
-        if newZone != prevZone {
-            if case let .tracking(w, oc, ow, _) = state {
-                state = .tracking(window: w, originCursor: oc, originWindow: ow, currentSnapZone: newZone)
-            }
-            onSnapZoneChanged?(target)
+
+        if case let .tracking(w, oc, ow, _, _) = state {
+            state = .tracking(window: w, originCursor: oc, originWindow: ow,
+                              currentSnapZone: newZone, snapVisibleFrame: visibleFrame)
         }
+        onSnapZoneChanged?(target)
     }
 }

@@ -13,7 +13,9 @@ final class SystemScreenInfoProvider: ScreenInfoProviding {
         let appKitPoint = CGPoint(x: point.x, y: primaryHeight - point.y)
 
         for screen in NSScreen.screens {
-            if screen.frame.contains(appKitPoint) {
+            let f = screen.frame
+            if appKitPoint.x >= f.minX && appKitPoint.x <= f.maxX &&
+               appKitPoint.y >= f.minY && appKitPoint.y <= f.maxY {
                 // Convert the screen's visibleFrame back to Quartz top-left coords.
                 let vf = screen.visibleFrame
                 let converted = CGRect(

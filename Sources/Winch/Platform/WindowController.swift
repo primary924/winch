@@ -59,13 +59,13 @@ final class WindowController: WindowControlling {
 
     func setFrame(of window: WindowHandle, to frame: CGRect) {
         guard let window = window as? AXWindow else { return }
-        var origin = frame.origin
         var size = frame.size
-        if let posValue = AXValueCreate(.cgPoint, &origin) {
-            _ = AXUIElementSetAttributeValue(window.element, kAXPositionAttribute as CFString, posValue)
-        }
         if let sizeValue = AXValueCreate(.cgSize, &size) {
             _ = AXUIElementSetAttributeValue(window.element, kAXSizeAttribute as CFString, sizeValue)
+        }
+        var origin = frame.origin
+        if let posValue = AXValueCreate(.cgPoint, &origin) {
+            _ = AXUIElementSetAttributeValue(window.element, kAXPositionAttribute as CFString, posValue)
         }
     }
 
