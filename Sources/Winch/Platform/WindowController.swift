@@ -48,28 +48,34 @@ final class WindowController: WindowControlling {
 
     func setPosition(of window: WindowHandle, to point: CGPoint) {
         guard let window = window as? AXWindow else { return }
-        var p = point
-        guard let value = AXValueCreate(.cgPoint, &p) else { return }
-        _ = AXUIElementSetAttributeValue(
-            window.element,
-            kAXPositionAttribute as CFString,
-            value
-        )
+        setAXPosition(window.element, point)
     }
 
     func setFrame(of window: WindowHandle, to frame: CGRect) {
         guard let window = window as? AXWindow else { return }
-        var size = frame.size
-        if let sizeValue = AXValueCreate(.cgSize, &size) {
-            _ = AXUIElementSetAttributeValue(window.element, kAXSizeAttribute as CFString, sizeValue)
-        }
-        var origin = frame.origin
-        if let posValue = AXValueCreate(.cgPoint, &origin) {
-            _ = AXUIElementSetAttributeValue(window.element, kAXPositionAttribute as CFString, posValue)
-        }
+        // Order matters: position → size → position. Setting size first lets macOS
+        // clamp the window to fit on screen from its *current* location, landing it
+        // smaller than the target; moving to the corner first gives the resize room.
+        WindowFrameApplier.apply(
+            frame,
+            setPosition: { setAXPosition(window.element, $0) },
+            setSize: { setAXSize(window.element, $0) }
+        )
     }
 
     // MARK: - private helpers
+
+    private func setAXPosition(_ element: AXUIElement, _ point: CGPoint) {
+        var p = point
+        guard let value = AXValueCreate(.cgPoint, &p) else { return }
+        _ = AXUIElementSetAttributeValue(element, kAXPositionAttribute as CFString, value)
+    }
+
+    private func setAXSize(_ element: AXUIElement, _ size: CGSize) {
+        var s = size
+        guard let value = AXValueCreate(.cgSize, &s) else { return }
+        _ = AXUIElementSetAttributeValue(element, kAXSizeAttribute as CFString, value)
+    }
 
     private func readPoint(_ element: AXUIElement, attribute: String) -> CGPoint? {
         var value: CFTypeRef?
